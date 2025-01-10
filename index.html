@@ -4,139 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Grid Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-        }
-        .preview {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        .preview img {
-            max-width: 100px;
-            max-height: 100px;
-        }
-        canvas {
-            display: none;
-        }
-        .processing {
-            display: none;
-            font-weight: bold;
-            color: blue;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
     <h1>Image Grid Generator</h1>
-    <label for="zipUpload">Upload .zip file:</label>
-    <input type="file" id="zipUpload" accept=".zip"><br><br>
 
-    <label for="gridWidth">Output Grid Width (px):</label>
-    <input type="number" id="gridWidth" placeholder="e.g., 3484"><br><br>
+    <!-- Upload Section -->
+    <div class="Section">
+        <label for="zipUpload" class="InputLabel">Upload .zip file:</label>
+        <input type="file" id="zipUpload" accept=".zip" class="InputBox">
+    </div>
 
-    <label for="gridHeight">Output Grid Height (px):</label>
-    <input type="number" id="gridHeight" placeholder="e.g., 1080"><br><br>
+    <!-- Resolution Section -->
+    <div class="SectionRowsContainer">
+        <div class="SectionRow">
+            <label for="gridWidth" class="InputLabel">Output Grid Width (px):</label>
+            <input type="number" id="gridWidth" placeholder="e.g., 3484" class="InputBox">
+        </div>
+        <div class="SectionRow">
+            <label for="gridHeight" class="InputLabel">Output Grid Height (px):</label>
+            <input type="number" id="gridHeight" placeholder="e.g., 1080" class="InputBox">
+        </div>
+    </div>
 
-    <p id="imageInfo"></p>
-    <p class="processing" id="loadingIndicator">Processing, please wait...</p>
+    <!-- Progress Section -->
+    <div class="Section">
+        <div class="ProgressBar" id="progressBar"></div>
+    </div>
 
-    <button id="generateGrid">Generate Grid</button>
-    <button id="downloadGrid" disabled>Download Grid</button>
+    <!-- Action Buttons -->
+    <div class="SectionRow">
+        <button id="generateGrid" class="BtnDefault">Generate Grid</button>
+        <button id="downloadGrid" class="BtnDefault" disabled>Download Grid</button>
+    </div>
 
-    <canvas id="gridCanvas"></canvas>
+    <canvas id="gridCanvas" style="display:none;"></canvas>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script>
-    const zipUpload = document.getElementById('zipUpload');
-    const gridWidth = document.getElementById('gridWidth');
-    const gridHeight = document.getElementById('gridHeight');
-    const generateGrid = document.getElementById('generateGrid');
-    const downloadGrid = document.getElementById('downloadGrid');
-    const imageInfo = document.getElementById('imageInfo');
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const gridCanvas = document.getElementById('gridCanvas');
-    const ctx = gridCanvas.getContext('2d');
-
-    let images = [];
-
-    zipUpload.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file && file.name.endsWith('.zip')) {
-            loadingIndicator.style.display = 'block'; // Show loading indicator
-            const zip = new JSZip();
-            const zipContents = await zip.loadAsync(file);
-            images = [];
-            imageInfo.textContent = '';
-
-            for (const filename in zipContents.files) {
-                if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) {
-                    const fileData = await zipContents.files[filename].async('blob');
-                    const url = URL.createObjectURL(fileData);
-                    const img = new Image();
-                    img.src = url;
-                    await img.decode();
-                    images.push(img);
-                }
-            }
-
-            loadingIndicator.style.display = 'none'; // Hide loading indicator
-            imageInfo.textContent = `Loaded ${images.length} images. Aspect Ratio: ${
-                images.length ? (images[0].width / images[0].height).toFixed(2) : 'N/A'
-            }`;
-        } else {
-            alert('Please upload a valid .zip file containing images.');
-        }
-    });
-
-    generateGrid.addEventListener('click', () => {
-        const width = parseInt(gridWidth.value, 10);
-        const height = parseInt(gridHeight.value, 10);
-
-        if (!images.length) {
-            alert('Please upload images first.');
-            return;
-        }
-        if (!width || !height) {
-            alert('Please enter valid grid dimensions.');
-            return;
-        }
-
-        loadingIndicator.style.display = 'block'; // Show loading indicator
-
-        const columns = Math.ceil(Math.sqrt(images.length * (width / height)));
-        const rows = Math.ceil(images.length / columns);
-        const thumbWidth = Math.floor(width / columns);
-        const thumbHeight = Math.floor(height / rows);
-
-        gridCanvas.width = width;
-        gridCanvas.height = height;
-        ctx.clearRect(0, 0, width, height);
-
-        images.forEach((img, index) => {
-            const x = (index % columns) * thumbWidth;
-            const y = Math.floor(index / columns) * thumbHeight;
-            ctx.drawImage(img, x, y, thumbWidth, thumbHeight);
-        });
-
-        loadingIndicator.style.display = 'none'; // Hide loading indicator
-        downloadGrid.disabled = false;
-    });
-
-    downloadGrid.addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.download = 'image_grid.jpg';
-        link.href = gridCanvas.toDataURL('image/jpeg');
-        link.click();
-    });
-</script>
+<script src="script.js"></script>
 </body>
 </html>
